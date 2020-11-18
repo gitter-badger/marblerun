@@ -38,7 +38,7 @@ import (
 var buildDir = flag.String("b", "", "build dir")
 var simulationMode = flag.Bool("s", false, "Execute test in simulation mode (without real quoting)")
 var noenclave = flag.Bool("noenclave", false, "Do not run with erthost")
-var meshServerAddr, clientServerAddr, marbleTestAddr string
+var meshServerAddr, clientServerAddr, promServerAddr, marbleTestAddr string
 var manifest core.Manifest
 var transportSkipVerify = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 var simFlag string
@@ -64,12 +64,14 @@ func TestMain(m *testing.M) {
 	updateManifest()
 
 	// get unused ports
-	var listenerMeshAPI, listenerClientAPI, listenerTestMarble net.Listener
+	var listenerMeshAPI, listenerClientAPI, listenerPromAPI, listenerTestMarble net.Listener
 	listenerMeshAPI, meshServerAddr = util.MustGetLocalListenerAndAddr()
 	listenerClientAPI, clientServerAddr = util.MustGetLocalListenerAndAddr()
+	listenerPromAPI, promServerAddr = util.MustGetLocalListenerAndAddr()
 	listenerTestMarble, marbleTestAddr = util.MustGetLocalListenerAndAddr()
 	listenerMeshAPI.Close()
 	listenerClientAPI.Close()
+	listenerPromAPI.Close()
 	listenerTestMarble.Close()
 	log.Printf("Got meshServerAddr: %v and clientServerAddr: %v\n", meshServerAddr, clientServerAddr)
 
@@ -271,6 +273,7 @@ func startCoordinator(cfg coordinatorConfig) *os.Process {
 	cmd.Env = []string{
 		makeEnv(config.MeshAddr, meshServerAddr),
 		makeEnv(config.ClientAddr, clientServerAddr),
+		makeEnv(config.PromAddr, promServerAddr),
 		makeEnv(config.DNSNames, cfg.dnsNames),
 		makeEnv(config.SealDir, cfg.sealDir),
 		simFlag,
