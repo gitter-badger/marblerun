@@ -17,9 +17,9 @@ import (
 )
 
 // DeriveKey derives a key from a secret.
-func DeriveKey(secret, salt []byte) ([]byte, error) {
+func DeriveKey(secret, salt []byte, length uint) ([]byte, error) {
 	hkdf := hkdf.New(sha256.New, secret, salt, nil)
-	key := make([]byte, 32)
+	key := make([]byte, length)
 	if _, err := io.ReadFull(hkdf, key); err != nil {
 		return nil, err
 	}
