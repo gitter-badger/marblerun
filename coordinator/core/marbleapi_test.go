@@ -219,7 +219,11 @@ func (ms *marbleSpawner) newMarble(marbleType string, infraName string, shouldSu
 		ms.assert.NoError(err)
 		_, err = secretCertShared.Verify(opts)
 		ms.assert.NoError(err, "failed to verify secret certificate with root CA: %v", err)
-		backendFirstSharedCert = *secretCertShared
+
+		// Since we're running async, we could run into a race condition here if the test is adjusted sometime to run multiple times.
+		if backendFirstSharedCert.Raw == nil {
+			backendFirstSharedCert = *secretCertShared
+		}
 
 		// Validate generated non-shared secret certificate
 		p, _ = pem.Decode([]byte(params.Env["TEST_SECRET_PRIVATE_CERT"]))
@@ -229,7 +233,11 @@ func (ms *marbleSpawner) newMarble(marbleType string, infraName string, shouldSu
 		ms.assert.NoError(err)
 		_, err = secretCertNonShared.Verify(opts)
 		ms.assert.NoError(err, "failed to verify secret certificate with root CA: %v", err)
-		backendFirstUniqueCert = *secretCertNonShared
+
+		// Since we're running async, we could run into a race condition here if the test is adjusted sometime to run multiple times.
+		if backendFirstUniqueCert.Raw == nil {
+			backendFirstUniqueCert = *secretCertNonShared
+		}
 
 	} else if marbleType == "backend_other" {
 		// Validate generated shared secret certificate
@@ -240,7 +248,11 @@ func (ms *marbleSpawner) newMarble(marbleType string, infraName string, shouldSu
 		ms.assert.NoError(err)
 		_, err = secretCertShared.Verify(opts)
 		ms.assert.NoError(err, "failed to verify secret certificate with root CA: %v", err)
-		backendOtherSharedCert = *secretCertShared
+
+		// Since we're running async and multiple times, let's avoid a race condition here
+		if backendOtherSharedCert.Raw == nil {
+			backendOtherSharedCert = *secretCertShared
+		}
 
 		// Validate generated non-shared secret certificate
 		p, _ = pem.Decode([]byte(params.Env["TEST_SECRET_PRIVATE_CERT"]))
@@ -250,7 +262,11 @@ func (ms *marbleSpawner) newMarble(marbleType string, infraName string, shouldSu
 		ms.assert.NoError(err)
 		_, err = secretCertNonShared.Verify(opts)
 		ms.assert.NoError(err, "failed to verify secret certificate with root CA: %v", err)
-		backendOtherUniqueCert = *secretCertNonShared
+
+		// Since we're running async and multiple times, let's avoid a race condition here
+		if backendOtherUniqueCert.Raw == nil {
+			backendOtherUniqueCert = *secretCertNonShared
+		}
 	}
 }
 
